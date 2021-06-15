@@ -65,11 +65,12 @@ do
 	echo "FSTAB entry:"
 	echo "UUID=$PART_UUID\t$MOUNT_POINT/$s\tbtrfs\tsubvol=$s\t0\t0" | sudo tee /etc/fstab
 	
-	BTRFS_SCRIPT='''
+	BTRFS_SCRIPT="
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s bi-hourly-$s   4 7200    $MOUNT_POINT/.snapshots
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s daily-$s       4 86400   $MOUNT_POINT/.snapshots
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s weekly-$s      8 604800  $MOUNT_POINT/.snapshots
-	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s tri-monthly-$s 4 7889400 $MOUNT_POINT/.snapshots'''
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s tri-monthly-$s 4 7889400 $MOUNT_POINT/.snapshots
+	"
 	echo "Configuring Snapshots for $s. Cron jobs are:"
 	echo $BTRFS_SCRIPT | sudo tee -a /etc/cron.hourly/btrfs-snp
 done
