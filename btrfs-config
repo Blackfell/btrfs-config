@@ -84,3 +84,4 @@ less /etc/cron.hourly/btrfs-snp
 
 echo "THERE YOU GO:"
 sudo btrfs filesystem show
+sudo btrfs filesystem usage $MOUNT_POINT
