@@ -79,3 +79,4 @@ cat /etc/fstab
 
 echo "Cron jobs are:"
 sudo chmod +x /etc/cron.hourly/btrfs-snp
+cat /etc/cron.hourly/btrfs-snp
