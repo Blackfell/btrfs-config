@@ -10,9 +10,6 @@
 MOUNT_POINT="/nas"
 SUB_VOLUMES=("videos" "dump" "books" "games" "pictures" "public" "music" "syncthing" "plex" "backups")
 
-# Installing pre-reqs
-echo "Installing btrfs tools"
-sudo apt isntall btrfs-tools 
 # Configure Autosnapshotting Tools
 echo "Getting btrfs-snp."
 sudo wget https://raw.githubusercontent.com/blackfell/btrfs-snp/master/btrfs-snp -O /usr/local/sbin/btrfs-snp
@@ -20,7 +17,7 @@ sudo chmod +x /usr/local/sbin/btrfs-snp
 
 # Get the disk name off the user
 while true
-do4
+do
 	read -p "What is the full path of the disk you're using? (E.G. /dev/sda) : " DISK_NAME
 	read -p "Working with $DISK_NAME, is that correct? [Y/n] " -n 1
 	if [[ $REPLY  =~ ^[Yy]$ ]]
@@ -29,7 +26,7 @@ do4
 done
 
 # Create a partition first please
-echo "Create a single partition now."
+echo "\nCreate a single partition now."
 sudo fdisk $DISK_NAME
 # Get the changes in teh kernel
 sudo partprobe -s
@@ -58,8 +55,9 @@ sudo mount $DISK_PART $MOUNT_POINT
 echo "Status:"
 df -h $MOUNT_POINT
 
-echo "Creating Subvolumes"
+echo "Creating Subvolumes & configuring snapshots"
 sudo btrfs subvolume create $MOUNT_POINT/.snapshots
+echo "#!/usr/bin/env bash" | sudo tee /etc/cron.hourly/btrfs-snp
 for s in "${SUB_VOLUMES[@]}"
 do
 	echo "creating $MOUNT_POINT/$s"
@@ -67,7 +65,7 @@ do
 	echo "FSTAB entry:"
 	echo "UUID=$PART_UUID\t$MOUNT_POINT/$s\tbtrfs\tsubvol=$s\t0\t0" | sudo tee /etc/fstab
 	
-	BTRFS_SCRIPT='''#!/bin/bash
+	BTRFS_SCRIPT='''
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s bi-hourly-$s   4 7200    $MOUNT_POINT/.snapshots
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s daily-$s       4 86400   $MOUNT_POINT/.snapshots
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s weekly-$s      8 604800  $MOUNT_POINT/.snapshots
