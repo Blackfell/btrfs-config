@@ -71,8 +71,8 @@ do
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s weekly-$s      8 604800  $MOUNT_POINT/.snapshots
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s tri-monthly-$s 4 7889400 $MOUNT_POINT/.snapshots
 	"
-	echo "Configuring Snapshots for $s. Cron jobs are:"
-	echo $BTRFS_SCRIPT | sudo tee -a /etc/cron.hourly/btrfs-snp
+	echo "Configuring Snapshots for $s."
+	echo $BTRFS_SCRIPT | sudo tee -a /etc/cron.hourly/btrfs-snp >/dev/null
 done
 
 echo "FSTAB entries: "
@@ -80,4 +80,4 @@ cat /etc/fstab
 
 echo "Cron jobs are:"
 sudo chmod +x /etc/cron.hourly/btrfs-snp
-cat /etc/cron.hourly/btrfs-snp
+less /etc/cron.hourly/btrfs-snp
