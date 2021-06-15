@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+# This software is Copyright (c) 2021, Blackfell <github at blackfell.net>
+# and it is hereby released to the general public under the following terms:
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted.
+
+# Script Variables
+MOUNT_POINT="/nas"
+SUB_VOLUMES=("videos" "dump" "books" "games" "pictures" "public" "music" "syncthing" "plex" "backups")
+
+# Installing pre-reqs
+echo "Installing btrfs tools"
+sudo apt isntall btrfs-tools 
+# Configure Autosnapshotting Tools
+echo "Getting btrfs-snp."
+sudo wget https://raw.githubusercontent.com/blackfell/btrfs-snp/master/btrfs-snp -O /usr/local/sbin/btrfs-snp
+sudo chmod +x /usr/local/sbin/btrfs-snp
+
+# Get the disk name off the user
+while true
+do4
+	read -p "What is the full path of the disk you're using? (E.G. /dev/sda) : " DISK_NAME
+	read -p "Working with $DISK_NAME, is that correct? [Y/n] " -n 1
+	if [[ $REPLY  =~ ^[Yy]$ ]]
+		then break
+	fi
+done
+
+# Create a partition first please
+echo "Create a single partition now."
+sudo fdisk $DISK_NAME
+# Get the changes in teh kernel
+sudo partprobe -s
+echo "Disk should be visible"
+ls -l /dev/ | grep sd
+while true
+do
+	read -p "Enter the full path of the partition you're using? (E.G. /dev/sda1) : " DISK_PART
+	read -p "Working with $DISK_PART, is that correct? [Y/n] " -n 1
+	if [[ $REPLY  =~ ^[Yy]$ ]]
+		then break
+	fi
+done
+
+echo "Searching for UUID of our new volume"
+PART_UUID=$(sudo blkid $disk_part | awk -f 'UUID=\"' '{print $2}' | cut -d '"' -f 1)
+echo "Got UUID of $PART_UUID for fstab entries"
+
+
+# Now configure BTRFS on it
+echo "Creating BTRFS Volume"
+sudo mkfs.btrfs -L ryiria $DISK_PART
+echo "Creating mount point at $MOUNT_POINT"
+sudo mkdir -v -p $MOUNT_POINT
+sudo mount $DISK_PART $MOUNT_POINT
+echo "Status:"
+df -h $MOUNT_POINT
+
+echo "Creating Subvolumes"
+sudo btrfs subvolume create $MOUNT_POINT/.snapshots
+for s in "${SUB_VOLUMES[@]}"
+do
+	echo "creating $MOUNT_POINT/$s"
+	sudo btrfs subvolume create $MOUNT_POINT/$s
+	echo "FSTAB entry:"
+	echo "UUID=$PART_UUID\t$MOUNT_POINT/$s\tbtrfs\tsubvol=$s\t0\t0" | sudo tee /etc/fstab
+	
+	BTRFS_SCRIPT='''#!/bin/bash
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s bi-hourly-$s   4 7200    $MOUNT_POINT/.snapshots
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s daily-$s       4 86400   $MOUNT_POINT/.snapshots
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s weekly-$s      8 604800  $MOUNT_POINT/.snapshots
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s tri-monthly-$s 4 7889400 $MOUNT_POINT/.snapshots'''
+	echo "Configuring Snapshots for $s. Cron jobs are:"
+	echo $BTRFS_SCRIPT | sudo tee -a /etc/cron.hourly/btrfs-snp
+done
+
+echo "FSTAB entries: "
+cat /etc/fstab
+
+echo "Cron jobs are:"
+sudo chmod +x /etc/cron.hourly/btrfs-snp
