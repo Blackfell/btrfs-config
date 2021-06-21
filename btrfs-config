@@ -8,7 +8,7 @@
 
 # Script Variables
 MOUNT_POINT="/nas"
-SUB_VOLUMES=("videos" "dump" "books" "games" "pictures" "public" "music" "syncthing" "plex" "backups")
+SUB_VOLUMES=("videos" "dump" "books" "games" "pictures" "public" "music" "syncthing" "emby" "backups" "tv" "movies")
 
 # Configure Autosnapshotting Tools
 echo "Getting btrfs-snp."
@@ -33,6 +33,7 @@ sudo partprobe -s
 echo "Disk should be visible"
 ls -l /dev/ | grep sd
 while true
+sudo chmod +x /etc/cron.hourly/btrfs-snp
 do
 	read -p "Enter the full path of the partition you're using? (E.G. /dev/sda1) : " DISK_PART
 	read -p "Working with $DISK_PART, is that correct? [Y/n] " -n 1
@@ -57,7 +58,7 @@ df -h $MOUNT_POINT
 
 echo "Creating Subvolumes & configuring snapshots"
 sudo btrfs subvolume create $MOUNT_POINT/.snapshots
-echo "#!/usr/bin/env bash" | sudo tee /etc/cron.hourly/btrfs-snp
+echo "#!/usr/bin/env bash\n" | sudo tee /etc/cron.hourly/btrfs-snp
 for s in "${SUB_VOLUMES[@]}"
 do
 	echo "creating $MOUNT_POINT/$s"
@@ -66,10 +67,10 @@ do
 	echo "UUID=$PART_UUID\t$MOUNT_POINT/$s\tbtrfs\tsubvol=$s\t0\t0" | sudo tee /etc/fstab
 	
 	BTRFS_SCRIPT="
-	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s bi-hourly-$s   4 7200    $MOUNT_POINT/.snapshots
-	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s daily-$s       4 86400   $MOUNT_POINT/.snapshots
-	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s weekly-$s      8 604800  $MOUNT_POINT/.snapshots
-	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s tri-monthly-$s 4 7889400 $MOUNT_POINT/.snapshots
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s bi-hourly-$s   4 7200    $MOUNT_POINT/.snapshots\n
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s daily-$s       4 86400   $MOUNT_POINT/.snapshots\n
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s weekly-$s      8 604800  $MOUNT_POINT/.snapshots\n
+	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s tri-monthly-$s 4 7889400 $MOUNT_POINT/.snapshots\n
 	"
 	echo "Configuring Snapshots for $s."
 	echo $BTRFS_SCRIPT | sudo tee -a /etc/cron.hourly/btrfs-snp >/dev/null
