@@ -42,7 +42,7 @@ do
 done
 
 echo "Searching for UUID of our new volume"
-PART_UUID=$(sudo blkid $disk_part | awk -f 'UUID=\"' '{print $2}' | cut -d '"' -f 1)
+PART_UUID=$(sudo blkid $disk_part | awk -F 'UUID=\"' '{print $2}' | cut -d '"' -f 1)
 echo "Got UUID of $PART_UUID for fstab entries"
 
 
