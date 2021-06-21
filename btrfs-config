@@ -45,7 +45,7 @@ echo "Searching for UUID of our new volume"
 PART_UUID=$(sudo blkid $disk_part | awk -F 'UUID=\"' '{print $2}' | cut -d '"' -f 1)
 while true
 do
-	read -p "Got UUID of $PART_UUID for fstab entries. Is that correct? [y/N] " -n 1
+	read -p "Got UUID of $PART_UUID for $disk_part. Is that correct? [y/N] " -n 1
 	if [[ $REPLY  =~ ^[Yy]$ ]]
 		then break
 	fi
