@@ -73,7 +73,7 @@ do
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s tri-monthly-$s 4 7889400 $MOUNT_POINT/.snapshots\n
 	"
 	echo "Configuring Snapshots for $s."
-	echo $BTRFS_SCRIPT | sudo tee -a /etc/cron.hourly/btrfs-snp >/dev/null
+	echo -e $BTRFS_SCRIPT | sudo tee -a /etc/cron.hourly/btrfs-snp >/dev/null
 done
 
 echo "FSTAB entries: "
