@@ -80,7 +80,7 @@ cat /etc/fstab
 
 echo "Cron jobs are:"
 sudo chmod +x /etc/cron.hourly/btrfs-snp
-less /etc/cron.hourly/btrfs-snp
+cat /etc/cron.hourly/btrfs-snp
 
 echo "THERE YOU GO:"
 sudo btrfs filesystem show
