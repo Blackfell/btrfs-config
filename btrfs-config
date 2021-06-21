@@ -32,8 +32,8 @@ sudo fdisk $DISK_NAME
 sudo partprobe -s
 echo "Disk should be visible"
 ls -l /dev/ | grep sd
-while true
 sudo chmod +x /etc/cron.hourly/btrfs-snp
+while true
 do
 	read -p "Enter the full path of the partition you're using? (E.G. /dev/sda1) : " DISK_PART
 	read -p "Working with $DISK_PART, is that correct? [Y/n] " -n 1
@@ -58,13 +58,13 @@ df -h $MOUNT_POINT
 
 echo "Creating Subvolumes & configuring snapshots"
 sudo btrfs subvolume create $MOUNT_POINT/.snapshots
-echo "#!/usr/bin/env bash\n" | sudo tee /etc/cron.hourly/btrfs-snp
+echo -e "#!/usr/bin/env bash\n" | sudo tee /etc/cron.hourly/btrfs-snp
 for s in "${SUB_VOLUMES[@]}"
 do
 	echo "creating $MOUNT_POINT/$s"
 	sudo btrfs subvolume create $MOUNT_POINT/$s
 	echo "FSTAB entry:"
-	echo "UUID=$PART_UUID\t$MOUNT_POINT/$s\tbtrfs\tsubvol=$s\t0\t0" | sudo tee /etc/fstab
+	echo -e "UUID=$PART_UUID\t$MOUNT_POINT/$s\tbtrfs\tsubvol=$s\t0\t0" | sudo tee -a /etc/fstab
 	
 	BTRFS_SCRIPT="
 	/usr/local/sbin/btrfs-snp $MOUNT_POINT/$s bi-hourly-$s   4 7200    $MOUNT_POINT/.snapshots\n
