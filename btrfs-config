@@ -32,7 +32,6 @@ sudo fdisk $DISK_NAME
 sudo partprobe -s
 echo "Disk should be visible"
 ls -l /dev/ | grep sd
-sudo chmod +x /etc/cron.hourly/btrfs-snp
 while true
 do
 	read -p "Enter the full path of the partition you're using? (E.G. /dev/sda1) : " DISK_PART
